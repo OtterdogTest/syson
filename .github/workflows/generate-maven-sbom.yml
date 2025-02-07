@@ -70,7 +70,7 @@ jobs:
       - name: Upload sbom
         uses: actions/upload-artifact@v4
         with:
-          name: sbom.json
+          name: backend-sbom
           path: ${{ env.PRODUCT_PATH }}/target/bom.json
 
   store-sbom-data: # stores sbom and metadata in a predefined format for otterdog to pick up
@@ -79,6 +79,6 @@ jobs:
     with:
       projectName: 'backend'
       projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
-      bomArtifact: 'sbom'
-      bomFilename: 'sbom.json'
+      bomArtifact: 'backend-sbom'
+      bomFilename: 'bom.json'
       parentProject: '75152c84-655b-4618-b23c-e5d3c3b562ae'
