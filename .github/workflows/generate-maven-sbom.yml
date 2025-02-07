@@ -19,10 +19,8 @@ on:
 env:
   JAVA_VERSION: '17'
   JAVA_DISTRO: 'temurin'
-  PRODUCT_NAME: 'backend'
   PRODUCT_PATH: 'backend/application'
   PLUGIN_VERSION: '2.7.8'
-  SBOM_NAME: 'backend_sbom.json'
   SBOM_TYPE: 'makeAggregateBom'
 
 permissions:
@@ -72,15 +70,15 @@ jobs:
       - name: Upload sbom
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.SBOM_NAME }}
+          name: sbom.json
           path: ${{ env.PRODUCT_PATH }}/target/bom.json
 
   store-sbom-data: # stores sbom and metadata in a predefined format for otterdog to pick up
     needs: ['generate-sbom']
     uses: OtterdogTest/otterdog/.github/workflows/store-sbom-data.yml@main
     with:
-      projectName: ${{ env.PRODUCT_NAME }}
+      projectName: 'backend'
       projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
       bomArtifact: 'sbom'
-      bomFilename: ${{ env.SBOM_NAME }}
+      bomFilename: 'sbom.json'
       parentProject: '75152c84-655b-4618-b23c-e5d3c3b562ae'

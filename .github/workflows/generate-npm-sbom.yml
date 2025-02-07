@@ -20,9 +20,7 @@ on:
 env:
   NODE_VERSION: '18.7'
   REGISTRY_URL: 'https://npm.pkg.github.com/'
-  PRODUCT_NAME: 'frontend'
   PRODUCT_PATH: './'
-  SBOM_NAME: 'frontend_sbom.json'
 
 permissions:
   contents: read
@@ -82,15 +80,15 @@ jobs:
       - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.SBOM_NAME }}
+          name: sbom.json
           path: ${{ env.PRODUCT_PATH }}/bom.json
 
   store-sbom-data: # stores sbom and metadata in a predefined format for otterdog to pick up
     needs: ['generate-sbom']
     uses: OtterdogTest/otterdog/.github/workflows/store-sbom-data.yml@main
     with:
-      projectName: ${{ env.PRODUCT_NAME }}
+      projectName: 'frontend'
       projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
       bomArtifact: 'sbom'
-      bomFilename: ${{ env.SBOM_NAME }}
+      bomFilename: 'sbom.json'
       parentProject: '1b099ee7-62ee-48e1-986b-b7f0309dd344'
