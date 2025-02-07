@@ -20,7 +20,7 @@
 	<version>2025.1.5</version>
 
 	<name>syson-application-parent</name>
-	<description>SysON Application Parent </description>
+	<description>SysON Application Parent</description>
 	<packaging>pom</packaging>
 
 	<distributionManagement>

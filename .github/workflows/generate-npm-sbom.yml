@@ -4,7 +4,6 @@ on:
   push:
     branches: 
       - "main"
-      - "sbom-workflow-test"  # TODO: remove 
     paths:
       - "package.json"
       - "package-lock.json"
