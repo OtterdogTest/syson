@@ -1,0 +1,96 @@
+name: Generate NPM SBOM
+
+on:
+  push:
+    branches: 
+      - "main"
+      - "sbom-workflow-test"  # TODO: remove 
+    paths:
+      - "package.json"
+      - "package-lock.json"
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        default: 'main'
+        required: true
+
+env:
+  NODE_VERSION: '18.7'
+  REGISTRY_URL: 'https://npm.pkg.github.com/'
+  PRODUCT_NAME: 'frontend'
+  PRODUCT_PATH: './'
+  SBOM_NAME: 'frontend_sbom.json'
+
+permissions:
+  contents: read
+
+jobs:
+  generate-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    outputs:
+      project-version: ${{ steps.version.outputs.PROJECT_VERSION }}
+    permissions:
+      packages: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Setup Node SDK
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: ${{ env.REGISTRY_URL }}
+          
+      - name: Install dependencies
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ github.token }}" >> .npmrc
+          echo "CI=true" >> $GITHUB_ENV
+          npm ci
+
+      - name: Install cyclonedx-npm
+        run: |
+          npm install --global @cyclonedx/cyclonedx-npm
+
+      - name: Generate SBOM
+        run: |
+          cyclonedx-npm --output-format json --output-file bom.json
+
+      - name: Extract version
+        id: version
+        run: |
+          event="${{ github.event_name }}"
+          ref="${{ github.ref }}"
+          input="${{ github.event.inputs.version }}"
+
+          VERSION="$(jq -r '.metadata.component.version' < ./${{ env.PRODUCT_PATH }}/bom.json)"
+
+          if [[ "$event" == "push" && "$ref" == refs/heads/* ]] || \
+            [[ "$event" == "workflow_dispatch" && ! "$input" =~ ^v ]]; then
+            VERSION="${VERSION}@dev"
+          fi
+
+          echo "PROJECT_VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Upload SBOM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SBOM_NAME }}
+          path: ${{ env.PRODUCT_PATH }}/bom.json
+
+  store-sbom-data: # stores sbom and metadata in a predefined format for otterdog to pick up
+    needs: ['generate-sbom']
+    uses: OtterdogTest/otterdog/.github/workflows/store-sbom-data.yml@main
+    with:
+      projectName: ${{ env.PRODUCT_NAME }}
+      projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
+      bomArtifact: 'sbom'
+      bomFilename: ${{ env.SBOM_NAME }}
+      parentProject: '1b099ee7-62ee-48e1-986b-b7f0309dd344'
