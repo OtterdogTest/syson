@@ -85,7 +85,7 @@ jobs:
 
   store-sbom-data: # stores sbom and metadata in a predefined format for otterdog to pick up
     needs: ['generate-sbom']
-    uses: OtterdogTest/otterdog/.github/workflows/store-sbom-data.yml@main
+    uses: eclipse-csi/workflows/.github/workflows/store-sbom-data.yml@main
     with:
       projectName: 'frontend'
       projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
